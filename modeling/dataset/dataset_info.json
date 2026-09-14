@@ -1,5 +1,5 @@
 {
-  "feature_version": "same_day_aggregates_hist7_14_30_60_90_selected8",
+  "feature_version": "same_day_aggregates_hist7_14_30_60_90_selected8_label_prior_v1",
   "validate_start": "2025-12-01",
   "history_window": {
     "days": [
@@ -29,6 +29,27 @@
       "prod__MAX_TUBING_PRES__max"
     ]
   },
+  "label_prior": {
+    "keys": [
+      "WELL_GROUP_NAME",
+      "PROD_INDICATOR"
+    ],
+    "columns": [
+      "label_hist_count",
+      "label_last_lag",
+      "label_last_is_short",
+      "label_hist_mean",
+      "label_hist_median",
+      "label_hist_short_ratio",
+      "label_recent5_median",
+      "label_recent5_short_ratio",
+      "label_days_since_last"
+    ],
+    "train_mode": "strict_past_only",
+    "validate_freeze_exclusive": "2025-12-01",
+    "test_freeze_exclusive": "2026-03-01",
+    "recent_observations": 5
+  },
   "validate_end_exclusive": "2026-03-01",
   "group_day_shape": [
     51184,
@@ -36,15 +57,15 @@
   ],
   "train_shape": [
     28575,
-    221
+    230
   ],
   "validate_shape": [
     9050,
-    221
+    230
   ],
   "test_shape": [
     11020,
-    220
+    229
   ],
   "feature_columns": [
     "WELL_GROUP_NAME",

@@ -6,6 +6,7 @@ import pandas as pd
 DAY_KEYS = ['WELL_GROUP_NAME', 'PROD_DATE']
 SAMPLE_KEYS = DAY_KEYS + ['INJ_INDICATOR', 'PROD_INDICATOR']
 TARGET = 'OPTIMAL_LAG_DAYS'
+LABEL_PRIOR_KEYS = ['WELL_GROUP_NAME', 'PROD_INDICATOR']
 METRICS = {
     'inj': ['INJ_VOL_DAILY', 'INJ_LIQ_DAILY', 'WH_TEMP', 'STEAM_INJ_PRES'],
     'prod': ['LIQ_PROD_DAILY', 'OIL_PROD_DAILY', 'WATER_CUT', 'WH_TEMP', 'MAX_TUBING_PRES'],
@@ -73,6 +74,37 @@ def add_history_feature(group_day, history_columns, history_windows):
     return pd.concat(features, axis=1)
 
 
+def build_frozen_label_prior(samples, label_data, freeze_date, recent_observations):
+    """用测试起点之前的训练标签构造整段冻结的 group×indicator 画像。"""
+    history = label_data[label_data['PROD_DATE'] < freeze_date].sort_values(
+        LABEL_PRIOR_KEYS + ['PROD_DATE'])
+    rows = []
+    for keys, group in history.groupby(LABEL_PRIOR_KEYS, sort=False):
+        values = group[TARGET].astype(float)
+        recent = values.tail(recent_observations)
+        rows.append({
+            'WELL_GROUP_NAME': keys[0],
+            'PROD_INDICATOR': keys[1],
+            'label_hist_count': len(values),
+            'label_last_lag': values.iloc[-1],
+            'label_last_is_short': float(values.iloc[-1] <= 3),
+            'label_hist_mean': values.mean(),
+            'label_hist_median': values.median(),
+            'label_hist_short_ratio': values.le(3).mean(),
+            'label_recent5_median': recent.median(),
+            'label_recent5_short_ratio': recent.le(3).mean(),
+            '_label_last_date': group['PROD_DATE'].iloc[-1],
+        })
+    frozen = pd.DataFrame(rows)
+    prior = pd.merge(
+        samples[SAMPLE_KEYS], frozen, on=LABEL_PRIOR_KEYS, how='left',
+        validate='many_to_one')
+    prior['label_hist_count'] = prior['label_hist_count'].fillna(0).astype(int)
+    prior['label_days_since_last'] = \
+        (prior['PROD_DATE'] - prior['_label_last_date']).dt.days
+    return prior.drop(columns='_label_last_date')
+
+
 def build_test_dataset(data_dir, config):
     """从赛事原始 data 目录构造测试样本特征。"""
     data_dir = Path(data_dir)
@@ -85,6 +117,7 @@ def build_test_dataset(data_dir, config):
         for split in ['train', 'test']
     ], ignore_index=True)
     well_info = pd.read_csv(data_dir / 'train' / 'well_group_info.csv')
+    label_data = read_data(data_dir / 'train' / 'optimal_lag_days.csv')
     template_raw = pd.read_csv(data_dir / 'test' / 'test_optimal_lag_days.csv')
     test_data = template_raw.copy()
     test_data['PROD_DATE'] = pd.to_datetime(
@@ -97,7 +130,15 @@ def build_test_dataset(data_dir, config):
         config['feature']['history_columns'],
         config['feature']['history_windows'],
     )
+    label_prior = build_frozen_label_prior(
+        test_data,
+        label_data,
+        test_data['PROD_DATE'].min(),
+        config['feature']['label_prior_recent_observations'],
+    )
     test_data['_row_id'] = range(len(test_data))
     test = pd.merge(test_data, feature_data, on=DAY_KEYS, how='left')
+    test = pd.merge(test, label_prior, on=SAMPLE_KEYS, how='left',
+                    validate='one_to_one')
     test = test.sort_values('_row_id').drop(columns='_row_id').reset_index(drop=True)
     return template_raw, test

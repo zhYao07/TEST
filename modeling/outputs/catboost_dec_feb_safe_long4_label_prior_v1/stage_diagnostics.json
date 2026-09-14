@@ -1,0 +1,143 @@
+{
+  "router": {
+    "threshold": 0.56,
+    "n": 9050,
+    "true_short_count": 3840,
+    "true_long_count": 5210,
+    "predicted_short_count": 2825,
+    "predicted_long_count": 6225,
+    "accuracy": 0.6177900552486187,
+    "official_s_seg": 37.06740331491712,
+    "balanced_accuracy": 0.5914494861644274,
+    "short_precision": 0.567433628318584,
+    "short_recall": 0.41744791666666664,
+    "short_f1": 0.48102025506376594,
+    "long_precision": 0.6406425702811245,
+    "long_recall": 0.7654510556621881,
+    "long_f1": 0.6975076519457805,
+    "auc_short": 0.6071679312619962,
+    "logloss": 0.6817717212511866,
+    "brier_score": 0.24474222277816113,
+    "confusion_matrix_rows_true_cols_pred_short_long": [
+      [
+        1603,
+        2237
+      ],
+      [
+        1222,
+        3988
+      ]
+    ]
+  },
+  "short_expert": {
+    "evaluation_scope": "仅真实标签为0至3的样本，假设Router全部路由正确",
+    "n": 3840,
+    "accuracy": 0.25416666666666665,
+    "mae": 1.1591145833333334,
+    "official_s_short_if_oracle_routed": 19.56796875,
+    "rmse": 1.4601476808871081,
+    "mean_error_prediction_minus_truth": -0.2955729166666667,
+    "within_1_day_rate": 0.6598958333333333,
+    "multiclass_logloss": 1.2748089845661397,
+    "confusion_matrix_rows_true_cols_pred_0_1_2_3": [
+      [
+        523,
+        579,
+        435,
+        8
+      ],
+      [
+        156,
+        190,
+        162,
+        6
+      ],
+      [
+        162,
+        169,
+        182,
+        11
+      ],
+      [
+        273,
+        422,
+        481,
+        81
+      ]
+    ],
+    "by_true_class": {
+      "0": {
+        "n": 1545,
+        "accuracy": 0.3385113268608414,
+        "mae": 0.9533980582524272,
+        "mean_prediction": 0.9533980582524272
+      },
+      "1": {
+        "n": 514,
+        "accuracy": 0.36964980544747084,
+        "mae": 0.642023346303502,
+        "mean_prediction": 1.0350194552529184
+      },
+      "2": {
+        "n": 524,
+        "accuracy": 0.3473282442748092,
+        "mae": 0.9618320610687023,
+        "mean_prediction": 1.0801526717557253
+      },
+      "3": {
+        "n": 1257,
+        "accuracy": 0.06443914081145585,
+        "mae": 1.7056483691328561,
+        "mean_prediction": 1.2943516308671439
+      }
+    }
+  },
+  "long_expert": {
+    "evaluation_scope": "仅真实标签为4至45的样本，假设Router全部路由正确",
+    "n": 5210,
+    "raw_mae": 10.624503709157672,
+    "rounded_mae": 10.614203454894433,
+    "official_s_long_if_oracle_routed": 7.877159309021113,
+    "rounded_rmse": 12.46587664844328,
+    "mean_error_prediction_minus_truth": 1.056813819577735,
+    "within_1_day_rate": 0.08522072936660269,
+    "within_3_days_rate": 0.19117082533589252,
+    "within_5_days_rate": 0.2813819577735125,
+    "prediction_min": 24,
+    "prediction_max": 35,
+    "prediction_mean": 28.595969289827256,
+    "safe_constant_value": 4,
+    "safe_constant_mae": 23.53915547024952,
+    "safe_constant_official_s_long_if_oracle_routed": 5.2921689059500965,
+    "by_true_range": {
+      "4-10": {
+        "n": 565,
+        "raw_mae": 21.779164234156763,
+        "rounded_mae": 21.8,
+        "safe_constant_mae": 2.8336283185840707,
+        "mean_prediction": 28.63362831858407
+      },
+      "11-20": {
+        "n": 1096,
+        "raw_mae": 13.210386261060258,
+        "rounded_mae": 13.196167883211679,
+        "safe_constant_mae": 11.120437956204379,
+        "mean_prediction": 28.31660583941606
+      },
+      "21-30": {
+        "n": 1266,
+        "raw_mae": 3.1179733270989027,
+        "rounded_mae": 3.117693522906793,
+        "safe_constant_mae": 22.007898894154817,
+        "mean_prediction": 28.613744075829384
+      },
+      "31-45": {
+        "n": 2283,
+        "raw_mae": 10.785150660614827,
+        "rounded_mae": 10.7634691195795,
+        "safe_constant_mae": 35.47437582128778,
+        "mean_prediction": 28.71090670170828
+      }
+    }
+  }
+}

@@ -24,6 +24,7 @@ def check_input_files(data_dir):
         data_dir / 'train' / 'well_group_info.csv',
         data_dir / 'train' / 'well_inj_data.csv',
         data_dir / 'train' / 'well_prod_data.csv',
+        data_dir / 'train' / 'optimal_lag_days.csv',
         data_dir / 'test' / 'well_inj_data.csv',
         data_dir / 'test' / 'well_prod_data.csv',
         data_dir / 'test' / 'test_optimal_lag_days.csv',

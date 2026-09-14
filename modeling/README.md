@@ -15,6 +15,8 @@
 - `get_aggregate_feature`：每个原始指标计算 sum、mean、max、min、std、有效井数，各侧另有记录井数。
 - `get_group_day`：构造完整井组日历，保留共享井的井组关系。全缺失 sum 为 NaN；无记录日计数为 0、数值为 NaN；std 的 ddof=1；不填充历史值。
 - `get_history_feature`：仅对 `HISTORY_COLUMNS` 中的 8 个核心序列增加过去 7、14、30、60、90 个自然日的 mean、std、min、max，共 160 列。先按井组 shift(1)，各窗口均截至 t-1，不含当天；缺失值不填充，均值/极值至少需要一个有效观测，std 至少需要两个有效观测（ddof=1）。训练、验证、测试的历史连续计算，不使用标签。
+- `get_past_only_label_prior`：训练样本按 `井组×采出指标` 使用严格早于样本日的历史标签，构造 count、last、均值、中位数、short 比例和最近 5 条统计。
+- `get_frozen_label_prior`：验证集统一冻结在 2025-12-01 之前，测试集统一冻结在 2026-03-01 之前；冻结画像不随未来标签更新，只有 `label_days_since_last` 随样本日期变化。
 - `get_feature`：后续添加特征的统一入口，目前仅调用多窗口历史统计，保留全部当日聚合值。
 - `get_dataset`：连接目标样本，保留行顺序，标签放在最后。日期、注入指标只用于样本标识，不进入本版模型。
 
@@ -31,7 +33,7 @@
 
 ## model.py
 
-`PARAMS` 集中设置参数，当前配置：深度 7、学习率 0.01、最多 1000 轮、随机种子 42。`STAGE_PARAMS` 定义三层损失。修改参数后只需重跑模型脚本，不必重新构造数据集。
+`PARAMS` 集中设置参数，当前配置：深度 7、学习率 0.02、最多 1000 轮、随机种子 42。`STAGE_PARAMS` 定义三层损失。修改参数后只需重跑模型脚本，不必重新构造数据集。
 
 - `model_catboost(train, validate, test)`：返回预测和三个模型。
 - `predict_catboost(models, test)`：推理。分段阈值 0.5，短段四分类取条件中位数，长段 MAE 回归裁剪至 4～45 后用 `np.rint` 输出整数。
@@ -40,7 +42,7 @@
 
 运行时先用训练集拟合，在十二月至二月整段验证集上早停；再合并 train 和 validate，用已选定树数重训并预测 test。验证参与早停，成绩属于开发验证成绩。全量重训不再把已加入训练的 validate 当成独立验证集。
 
-当前 `model.py` 使用 0.5 路由阈值；进入 Long 分支时最终输出固定为 4 天，以降低真实短段误入 Long 后的损失。结果在 `modeling/outputs/catboost_dec_feb_safe_long4/`。每次运行只保存最终提交文件 `test_optimal_lag_days.csv`、`final_models/` 三个模型权重和 `training_summary.json`。
+当前 label-prior v1 使用 0.56 路由阈值；进入 Long 分支时最终输出固定为 4 天，以降低真实短段误入 Long 后的损失。结果在 `modeling/outputs/catboost_dec_feb_safe_long4_label_prior_v1/`。每次运行保存最终提交文件 `test_optimal_lag_days.csv`、`final_models/` 三个模型权重、`stage_diagnostics.json` 和 `training_summary.json`。汇总同时记录阈值扫描前 10 名和验证集分月成绩；`stage_diagnostics.json` 分别记录 Router、Short Expert、Long Expert 的独立能力，不参与预测。
 
 ## model2.py
 

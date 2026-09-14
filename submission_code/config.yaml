@@ -1,9 +1,10 @@
 model:
   model_dir: models
-  short_threshold: 0.5
+  short_threshold: 0.56
   long_safe_value: 4
 
 feature:
+  label_prior_recent_observations: 5
   history_windows: [7, 14, 30, 60, 90]
   history_columns:
     - inj__INJ_VOL_DAILY__sum
