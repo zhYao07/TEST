@@ -95,10 +95,24 @@ def build_frozen_label_prior(samples, label_data, freeze_date, recent_observatio
             'label_recent5_short_ratio': recent.le(3).mean(),
             '_label_last_date': group['PROD_DATE'].iloc[-1],
         })
-    frozen = pd.DataFrame(rows)
+    frozen_columns = LABEL_PRIOR_KEYS + [
+        'label_hist_count', 'label_last_lag', 'label_last_is_short',
+        'label_hist_mean', 'label_hist_median', 'label_hist_short_ratio',
+        'label_recent5_median', 'label_recent5_short_ratio',
+        '_label_last_date',
+    ]
+    frozen = pd.DataFrame(rows, columns=frozen_columns)
+    frozen['_label_last_date'] = pd.to_datetime(frozen['_label_last_date'])
     prior = pd.merge(
         samples[SAMPLE_KEYS], frozen, on=LABEL_PRIOR_KEYS, how='left',
         validate='many_to_one')
+    prior_columns = [
+        'label_hist_count', 'label_last_lag', 'label_last_is_short',
+        'label_hist_mean', 'label_hist_median', 'label_hist_short_ratio',
+        'label_recent5_median', 'label_recent5_short_ratio',
+    ]
+    for column in prior_columns:
+        prior[column] = pd.to_numeric(prior[column], errors='coerce')
     prior['label_hist_count'] = prior['label_hist_count'].fillna(0).astype(int)
     prior['label_days_since_last'] = \
         (prior['PROD_DATE'] - prior['_label_last_date']).dt.days

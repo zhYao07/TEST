@@ -1,89 +1,40 @@
 {
-  "feature_version": "same_day_aggregates_hist7_14_30_60_90_selected8_label_prior_v1",
-  "validate_start": "2025-12-01",
-  "history_window": {
-    "days": [
-      7,
-      14,
-      30,
-      60,
-      90
-    ],
-    "include_today": false,
-    "min_periods": 1,
-    "statistics": [
-      "mean",
-      "std",
-      "min",
-      "max"
-    ],
-    "std_ddof": 1,
-    "source_columns": [
-      "inj__INJ_VOL_DAILY__sum",
-      "inj__WH_TEMP__mean",
-      "inj__STEAM_INJ_PRES__mean",
-      "prod__LIQ_PROD_DAILY__sum",
-      "prod__OIL_PROD_DAILY__sum",
-      "prod__WATER_CUT__mean",
-      "prod__WH_TEMP__mean",
-      "prod__MAX_TUBING_PRES__max"
-    ]
+  "feature_version": "same_day_aggregates_hist7_14_30_60_90_selected8_label_prior_block3m_v1",
+  "params": {
+    "iterations": 1000,
+    "depth": 7,
+    "learning_rate": 0.02,
+    "l2_leaf_reg": 5,
+    "random_seed": 42,
+    "thread_count": 8,
+    "task_type": "CPU",
+    "allow_writing_files": false,
+    "verbose": false
   },
-  "label_prior": {
-    "keys": [
-      "WELL_GROUP_NAME",
-      "PROD_INDICATOR"
-    ],
-    "columns": [
-      "label_hist_count",
-      "label_last_lag",
-      "label_last_is_short",
-      "label_hist_mean",
-      "label_hist_median",
-      "label_hist_short_ratio",
-      "label_recent5_median",
-      "label_recent5_short_ratio",
-      "label_days_since_last"
-    ],
-    "train_mode": "past_only",
-    "available_train_blocks": [
-      [
-        "2025-03-20",
-        "2025-06-01"
-      ],
-      [
-        "2025-06-01",
-        "2025-09-01"
-      ],
-      [
-        "2025-09-01",
-        "2025-12-01"
-      ]
-    ],
-    "validate_freeze_exclusive": "2025-12-01",
-    "test_freeze_exclusive": "2026-03-01",
-    "recent_observations": 5
+  "stage_params": {
+    "segment": {
+      "loss_function": "Logloss"
+    },
+    "short": {
+      "loss_function": "MultiClass",
+      "classes_count": 4
+    },
+    "long": {
+      "loss_function": "MAE"
+    }
   },
-  "validate_end_exclusive": "2026-03-01",
-  "group_day_shape": [
-    51184,
-    58
-  ],
-  "train_shape": [
-    28575,
-    230
-  ],
-  "validate_shape": [
-    9050,
-    230
-  ],
-  "test_shape": [
-    11020,
-    229
-  ],
+  "short_threshold": 0.56,
+  "long_output_mode": "safe_constant",
+  "long_safe_value": 4,
+  "early_stopping_rounds": 150,
+  "selected_iterations": {
+    "segment": 3,
+    "short": 76,
+    "long": 10
+  },
   "feature_columns": [
     "WELL_GROUP_NAME",
-    "PROD_DATE",
+    "PROD_INDICATOR",
     "inj__recorded_well_count",
     "inj__INJ_VOL_DAILY__sum",
     "inj__INJ_VOL_DAILY__mean",
@@ -91,12 +42,6 @@
     "inj__INJ_VOL_DAILY__min",
     "inj__INJ_VOL_DAILY__std",
     "inj__INJ_VOL_DAILY__valid_well_count",
-    "inj__INJ_LIQ_DAILY__sum",
-    "inj__INJ_LIQ_DAILY__mean",
-    "inj__INJ_LIQ_DAILY__max",
-    "inj__INJ_LIQ_DAILY__min",
-    "inj__INJ_LIQ_DAILY__std",
-    "inj__INJ_LIQ_DAILY__valid_well_count",
     "inj__WH_TEMP__sum",
     "inj__WH_TEMP__mean",
     "inj__WH_TEMP__max",
@@ -299,6 +244,204 @@
     "prod__OIL_PROD_DAILY__sum__hist90_max",
     "prod__WATER_CUT__mean__hist90_max",
     "prod__WH_TEMP__mean__hist90_max",
-    "prod__MAX_TUBING_PRES__max__hist90_max"
-  ]
+    "prod__MAX_TUBING_PRES__max__hist90_max",
+    "label_hist_count",
+    "label_last_lag",
+    "label_last_is_short",
+    "label_hist_mean",
+    "label_hist_median",
+    "label_hist_short_ratio",
+    "label_recent5_median",
+    "label_recent5_short_ratio",
+    "label_days_since_last"
+  ],
+  "feature_count": 221,
+  "excluded_columns": [
+    "PROD_DATE",
+    "INJ_INDICATOR",
+    "inj__INJ_LIQ_DAILY__sum",
+    "inj__INJ_LIQ_DAILY__mean",
+    "inj__INJ_LIQ_DAILY__max",
+    "inj__INJ_LIQ_DAILY__min",
+    "inj__INJ_LIQ_DAILY__std",
+    "inj__INJ_LIQ_DAILY__valid_well_count",
+    "OPTIMAL_LAG_DAYS"
+  ],
+  "train_rows": 28575,
+  "validate_rows": 9050,
+  "test_rows": 11020,
+  "validate_start": "2025-12-01",
+  "validate_end": "2026-02-28",
+  "metrics": {
+    "n": 9050,
+    "segment_accuracy": 0.5756906077348066,
+    "MAE_short": 2.611197916666667,
+    "MAE_long": 23.53915547024952,
+    "S_seg": 34.5414364640884,
+    "S_short": 6.499218749999997,
+    "S_long": 5.2921689059500965,
+    "score": 46.332824120038495
+  },
+  "monthly_metrics": {
+    "2025-12": {
+      "n": 1055,
+      "segment_accuracy": 0.4218009478672986,
+      "MAE_short": 2.7311475409836063,
+      "MAE_long": 22.564044943820225,
+      "S_seg": 25.308056872037916,
+      "S_short": 5.419672131147543,
+      "S_long": 5.4871910112359545,
+      "score": 36.214920014421416
+    },
+    "2026-01": {
+      "n": 3740,
+      "segment_accuracy": 0.6368983957219251,
+      "MAE_short": 2.711340206185567,
+      "MAE_long": 23.51679261125105,
+      "S_seg": 38.213903743315505,
+      "S_short": 5.597938144329895,
+      "S_long": 5.29664147774979,
+      "score": 49.10848336539519
+    },
+    "2026-02": {
+      "n": 4255,
+      "segment_accuracy": 0.5600470035252644,
+      "MAE_short": 2.4994658119658117,
+      "MAE_long": 23.74360050356693,
+      "S_seg": 33.60282021151586,
+      "S_short": 7.504807692307693,
+      "S_long": 5.251279899286613,
+      "score": 46.35890780311017
+    }
+  },
+  "threshold_scan_top10": [
+    {
+      "threshold": 0.5,
+      "n": 9050,
+      "segment_accuracy": 0.5079558011049724,
+      "MAE_short": 1.4622395833333333,
+      "MAE_long": 25.670441458733205,
+      "S_seg": 30.477348066298344,
+      "S_short": 16.83984375,
+      "S_long": 4.865911708253359,
+      "score": 52.183103524551704
+    },
+    {
+      "threshold": 0.49,
+      "n": 9050,
+      "segment_accuracy": 0.44265193370165745,
+      "MAE_short": 1.2317708333333333,
+      "MAE_long": 26.30383877159309,
+      "S_seg": 26.559116022099445,
+      "S_short": 18.9140625,
+      "S_long": 4.739232245681382,
+      "score": 50.212410767780824
+    },
+    {
+      "threshold": 0.48,
+      "n": 9050,
+      "segment_accuracy": 0.4298342541436464,
+      "MAE_short": 1.1458333333333333,
+      "MAE_long": 26.513819577735124,
+      "S_seg": 25.790055248618785,
+      "S_short": 19.6875,
+      "S_long": 4.697236084452975,
+      "score": 50.17479133307176
+    },
+    {
+      "threshold": 0.47,
+      "n": 9050,
+      "segment_accuracy": 0.4269613259668508,
+      "MAE_short": 1.14765625,
+      "MAE_long": 26.537236084452974,
+      "S_seg": 25.617679558011048,
+      "S_short": 19.671093749999997,
+      "S_long": 4.692552783109405,
+      "score": 49.98132609112045
+    },
+    {
+      "threshold": 0.2,
+      "n": 9050,
+      "segment_accuracy": 0.4243093922651934,
+      "MAE_short": 1.14765625,
+      "MAE_long": 26.54971209213052,
+      "S_seg": 25.4585635359116,
+      "S_short": 19.671093749999997,
+      "S_long": 4.690057581573896,
+      "score": 49.819714867485494
+    },
+    {
+      "threshold": 0.21,
+      "n": 9050,
+      "segment_accuracy": 0.4243093922651934,
+      "MAE_short": 1.14765625,
+      "MAE_long": 26.54971209213052,
+      "S_seg": 25.4585635359116,
+      "S_short": 19.671093749999997,
+      "S_long": 4.690057581573896,
+      "score": 49.819714867485494
+    },
+    {
+      "threshold": 0.22,
+      "n": 9050,
+      "segment_accuracy": 0.4243093922651934,
+      "MAE_short": 1.14765625,
+      "MAE_long": 26.54971209213052,
+      "S_seg": 25.4585635359116,
+      "S_short": 19.671093749999997,
+      "S_long": 4.690057581573896,
+      "score": 49.819714867485494
+    },
+    {
+      "threshold": 0.23,
+      "n": 9050,
+      "segment_accuracy": 0.4243093922651934,
+      "MAE_short": 1.14765625,
+      "MAE_long": 26.54971209213052,
+      "S_seg": 25.4585635359116,
+      "S_short": 19.671093749999997,
+      "S_long": 4.690057581573896,
+      "score": 49.819714867485494
+    },
+    {
+      "threshold": 0.24,
+      "n": 9050,
+      "segment_accuracy": 0.4243093922651934,
+      "MAE_short": 1.14765625,
+      "MAE_long": 26.54971209213052,
+      "S_seg": 25.4585635359116,
+      "S_short": 19.671093749999997,
+      "S_long": 4.690057581573896,
+      "score": 49.819714867485494
+    },
+    {
+      "threshold": 0.25,
+      "n": 9050,
+      "segment_accuracy": 0.4243093922651934,
+      "MAE_short": 1.14765625,
+      "MAE_long": 26.54971209213052,
+      "S_seg": 25.4585635359116,
+      "S_short": 19.671093749999997,
+      "S_long": 4.690057581573896,
+      "score": 49.819714867485494
+    }
+  ],
+  "constant_one_reference": {
+    "n": 9050,
+    "segment_accuracy": 0.4243093922651934,
+    "MAE_short": 1.1934895833333334,
+    "MAE_long": 26.53915547024952,
+    "S_seg": 25.4585635359116,
+    "S_short": 19.25859375,
+    "S_long": 4.692168905950096,
+    "score": 49.409326191861695
+  },
+  "seconds": 99.28977370262146,
+  "output_files": [
+    "test_optimal_lag_days.csv",
+    "final_models/",
+    "stage_diagnostics.json",
+    "training_summary.json"
+  ],
+  "note": "十二月至二月参与各阶段早停；Long回归保留作诊断，最终Long路由固定输出4天。"
 }

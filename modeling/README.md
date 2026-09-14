@@ -17,6 +17,8 @@
 - `get_history_feature`：仅对 `HISTORY_COLUMNS` 中的 8 个核心序列增加过去 7、14、30、60、90 个自然日的 mean、std、min、max，共 160 列。先按井组 shift(1)，各窗口均截至 t-1，不含当天；缺失值不填充，均值/极值至少需要一个有效观测，std 至少需要两个有效观测（ddof=1）。训练、验证、测试的历史连续计算，不使用标签。
 - `get_past_only_label_prior`：训练样本按 `井组×采出指标` 使用严格早于样本日的历史标签，构造 count、last、均值、中位数、short 比例和最近 5 条统计。
 - `get_frozen_label_prior`：验证集统一冻结在 2025-12-01 之前，测试集统一冻结在 2026-03-01 之前；冻结画像不随未来标签更新，只有 `label_days_since_last` 随样本日期变化。
+
+三个月 block-frozen Train 方案已做独立实验，产物保存在 `modeling/outputs/catboost_dec_feb_safe_long4_label_prior_block3m_v1/`。其最优阈值得分 52.18310，未超过当前 past-only v1 的 55.08751，因此 `TRAIN_PRIOR_MODE` 默认仍为 `past_only`；切换为 `block_frozen` 可复现实验。
 - `get_feature`：后续添加特征的统一入口，目前仅调用多窗口历史统计，保留全部当日聚合值。
 - `get_dataset`：连接目标样本，保留行顺序，标签放在最后。日期、注入指标只用于样本标识，不进入本版模型。
 

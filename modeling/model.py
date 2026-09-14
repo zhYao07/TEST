@@ -116,12 +116,18 @@ def stage_diagnostics(result, y_true, short_threshold=SHORT_THRESHOLD,
         'balanced_accuracy': float((short_recall + long_recall) / 2),
         'short_precision': short_precision,
         'short_recall': short_recall,
-        'short_f1': safe_divide(2 * short_precision * short_recall,
-                                short_precision + short_recall),
+        'short_f1': (
+            safe_divide(2 * short_precision * short_recall,
+                        short_precision + short_recall)
+            if short_precision is not None and short_recall is not None else None
+        ),
         'long_precision': long_precision,
         'long_recall': long_recall,
-        'long_f1': safe_divide(2 * long_precision * long_recall,
-                               long_precision + long_recall),
+        'long_f1': (
+            safe_divide(2 * long_precision * long_recall,
+                        long_precision + long_recall)
+            if long_precision is not None and long_recall is not None else None
+        ),
         'auc_short': binary_auc(true_short, p_short),
         'logloss': float(-np.mean(true_short * np.log(p_short) +
                                   (~true_short) * np.log(1 - p_short))),

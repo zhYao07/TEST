@@ -6,10 +6,20 @@ import pandas as pd
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(os.path.dirname(BASE_DIR), 'data')
 DATASET_DIR = os.path.join(BASE_DIR, 'dataset')
-FEATURE_VERSION = 'same_day_aggregates_hist7_14_30_60_90_selected8_label_prior_v1'
+TRAIN_PRIOR_MODE = 'past_only'  # 可切换为 block_frozen 复现实验
+FEATURE_VERSION = (
+    'same_day_aggregates_hist7_14_30_60_90_selected8_label_prior_block3m_v1'
+    if TRAIN_PRIOR_MODE == 'block_frozen'
+    else 'same_day_aggregates_hist7_14_30_60_90_selected8_label_prior_v1'
+)
 VALIDATE_START = '2025-12-01'
 VALIDATE_END = '2026-03-01'  # 左闭右开，包含十二月、一月、二月
 TEST_FREEZE_DATE = '2026-03-01'
+TRAIN_PRIOR_BLOCKS = [
+    ('2025-03-20', '2025-06-01'),
+    ('2025-06-01', '2025-09-01'),
+    ('2025-09-01', VALIDATE_START),
+]
 
 DAY_KEYS = ['WELL_GROUP_NAME', 'PROD_DATE']
 SAMPLE_KEYS = DAY_KEYS + ['INJ_INDICATOR', 'PROD_INDICATOR']
@@ -163,17 +173,47 @@ def get_frozen_label_prior(samples, label_data, freeze_date):
             'label_recent5_short_ratio': recent.le(3).mean(),
             '_label_last_date': group['PROD_DATE'].iloc[-1],
         })
-    frozen = pd.DataFrame(rows)
+    frozen_columns = LABEL_PRIOR_KEYS + [
+        column for column in LABEL_PRIOR_COLUMNS
+        if column not in ['label_days_since_last']
+    ] + ['_label_last_date']
+    frozen = pd.DataFrame(rows, columns=frozen_columns)
+    frozen['_label_last_date'] = pd.to_datetime(frozen['_label_last_date'])
 
     prior = samples[SAMPLE_KEYS].copy()
     prior['_row_id'] = range(len(prior))
     prior = pd.merge(prior, frozen, on=LABEL_PRIOR_KEYS, how='left',
                      validate='many_to_one')
+    for column in LABEL_PRIOR_COLUMNS:
+        if column != 'label_days_since_last':
+            prior[column] = pd.to_numeric(prior[column], errors='coerce')
     prior['label_hist_count'] = prior['label_hist_count'].fillna(0).astype(int)
     prior['label_days_since_last'] = \
         (prior['PROD_DATE'] - prior['_label_last_date']).dt.days
     prior = prior.sort_values('_row_id').drop(
         columns=['_row_id', '_label_last_date']).reset_index(drop=True)
+    return prior
+
+
+def get_block_frozen_label_prior(samples, label_data, blocks):
+    """按未来三个月预测场景，为 Train 的每个时间块冻结标签画像。"""
+    parts = []
+    covered = pd.Series(False, index=samples.index)
+    for start, end in blocks:
+        start_date, end_date = pd.Timestamp(start), pd.Timestamp(end)
+        mask = samples['PROD_DATE'].ge(start_date) & samples['PROD_DATE'].lt(end_date)
+        if mask.any():
+            parts.append(get_frozen_label_prior(
+                samples.loc[mask], label_data, start_date))
+            covered.loc[mask] = True
+    if not covered.all():
+        missing_dates = samples.loc[~covered, 'PROD_DATE']
+        raise ValueError(
+            f'Train label prior 冻结块未覆盖 {len(missing_dates)} 行：'
+            f'{missing_dates.min()} 至 {missing_dates.max()}')
+    prior = pd.concat(parts, ignore_index=True)
+    if len(prior) != len(samples):
+        raise ValueError('Train label prior 冻结块生成行数与训练样本不一致')
     return prior
 
 
@@ -208,7 +248,13 @@ def main():
     train_label = label_data[label_data['PROD_DATE'] < VALIDATE_START]
     validate_label = label_data[(label_data['PROD_DATE'] >= VALIDATE_START) &
                                (label_data['PROD_DATE'] < VALIDATE_END)]
-    train_prior = get_past_only_label_prior(label_data)
+    if TRAIN_PRIOR_MODE == 'block_frozen':
+        train_prior = get_block_frozen_label_prior(
+            train_label, label_data, TRAIN_PRIOR_BLOCKS)
+    elif TRAIN_PRIOR_MODE == 'past_only':
+        train_prior = get_past_only_label_prior(label_data)
+    else:
+        raise ValueError(f'未知 TRAIN_PRIOR_MODE: {TRAIN_PRIOR_MODE}')
     validate_prior = get_frozen_label_prior(validate_label, label_data, VALIDATE_START)
     test_prior = get_frozen_label_prior(test_data, label_data, TEST_FREEZE_DATE)
     train = get_dataset(train_label, feature_data, train_prior)
@@ -227,7 +273,8 @@ def main():
                                'statistics': ['mean', 'std', 'min', 'max'], 'std_ddof': 1,
                                'source_columns': HISTORY_COLUMNS},
             'label_prior': {'keys': LABEL_PRIOR_KEYS, 'columns': LABEL_PRIOR_COLUMNS,
-                            'train_mode': 'strict_past_only',
+                            'train_mode': TRAIN_PRIOR_MODE,
+                            'available_train_blocks': TRAIN_PRIOR_BLOCKS,
                             'validate_freeze_exclusive': VALIDATE_START,
                             'test_freeze_exclusive': TEST_FREEZE_DATE,
                             'recent_observations': 5},
