@@ -1,0 +1,11 @@
+{
+  "command": "python predict.py --data_dir ../data --output ./test_optimal_lag_days.csv",
+  "output_columns": [
+    "WELL_GROUP_NAME",
+    "PROD_DATE",
+    "INJ_INDICATOR",
+    "PROD_INDICATOR",
+    "OPTIMAL_LAG_DAYS"
+  ],
+  "output_file": "test_optimal_lag_days.csv"
+}

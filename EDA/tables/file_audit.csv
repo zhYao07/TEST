@@ -1,0 +1,9 @@
+﻿数据集,文件,行数,列数,完全重复行,唯一WELL_GROUP_NAME,唯一WELL_NAME,唯一PROD_DATE
+train,well_group_info.csv,540,10,0,112,384.0,1
+train,well_inj_data.csv,56280,7,0,108,237.0,365
+train,well_prod_data.csv,80443,8,0,112,242.0,363
+train,optimal_lag_days.csv,37625,5,0,108,,223
+test,well_group_info.csv,540,10,0,112,384.0,1
+test,well_inj_data.csv,4408,7,0,42,32.0,92
+test,well_prod_data.csv,14996,8,0,112,138.0,92
+test,test_optimal_lag_days.csv,11020,5,0,33,,77

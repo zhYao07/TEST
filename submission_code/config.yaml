@@ -1,0 +1,16 @@
+model:
+  model_dir: models
+  short_threshold: 0.5
+  long_safe_value: 4
+
+feature:
+  history_windows: [7, 14, 30, 60, 90]
+  history_columns:
+    - inj__INJ_VOL_DAILY__sum
+    - inj__WH_TEMP__mean
+    - inj__STEAM_INJ_PRES__mean
+    - prod__LIQ_PROD_DAILY__sum
+    - prod__OIL_PROD_DAILY__sum
+    - prod__WATER_CUT__mean
+    - prod__WH_TEMP__mean
+    - prod__MAX_TUBING_PRES__max
